@@ -1,0 +1,26 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Пользователь" as User
+
+rectangle "FinanceBuddy" {
+  usecase "Добавить операцию
+(доход/расход)" as UC_Add
+  usecase "Просмотреть список
+операций" as UC_View
+  usecase "Удалить операцию" as UC_Delete
+  usecase "Посмотреть сводку
+(доход, расход,
+баланс)" as UC_Summary
+
+  UC_Add --> UC_Summary : <<include>>
+  UC_View --> UC_Summary : <<include>>
+  UC_Delete --> UC_Summary : <<include>>
+}
+
+User --> UC_Add
+User --> UC_View
+User --> UC_Delete
+User --> UC_Summary
+@enduml

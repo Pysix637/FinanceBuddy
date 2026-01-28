@@ -1,0 +1,99 @@
+<Window x:Class="FinanceBuddy.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="FinanceBuddy" Height="600" Width="980"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="16"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <DockPanel Grid.Row="0">
+            <StackPanel Orientation="Vertical" DockPanel.Dock="Left">
+                <TextBlock Text="FinanceBuddy" FontSize="26" FontWeight="SemiBold"/>
+                <TextBlock Text="персональный финансовый дневник" Opacity="0.7"/>
+            </StackPanel>
+
+            <Border DockPanel.Dock="Right" Padding="12,8" CornerRadius="10" BorderThickness="1" BorderBrush="#DDD">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Доход: " Opacity="0.7"/>
+                    <TextBlock Text="{Binding TotalIncome, StringFormat={}{0:N2}}"/>
+                    <TextBlock Text="   Расход: " Margin="14,0,0,0" Opacity="0.7"/>
+                    <TextBlock Text="{Binding TotalExpense, StringFormat={}{0:N2}}"/>
+                    <TextBlock Text="   Баланс: " Margin="14,0,0,0" Opacity="0.7"/>
+                    <TextBlock Text="{Binding Balance, StringFormat={}{0:N2}}" FontWeight="SemiBold"/>
+                </StackPanel>
+            </Border>
+        </DockPanel>
+
+        <!-- Body -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Transactions list -->
+            <Border Grid.Column="0" CornerRadius="14" BorderBrush="#DDD" BorderThickness="1" Padding="14">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="Операции" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,10"/>
+
+                    <DataGrid ItemsSource="{Binding Transactions}"
+                              SelectedItem="{Binding Selected, Mode=TwoWay}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              IsReadOnly="True"
+                              HeadersVisibility="Column"
+                              GridLinesVisibility="None">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Дата" Binding="{Binding Date, StringFormat={}{0:dd.MM.yyyy}}" Width="110"/>
+                            <DataGridTextColumn Header="Тип" Binding="{Binding Type}" Width="90"/>
+                            <DataGridTextColumn Header="Категория" Binding="{Binding Category}" Width="*"/>
+                            <DataGridTextColumn Header="Описание" Binding="{Binding Description}" Width="2*"/>
+                            <DataGridTextColumn Header="Сумма" Binding="{Binding Amount, StringFormat={}{0:N2}}" Width="120"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,10,0,0">
+                        <Button Content="Удалить выбранное" Command="{Binding DeleteSelectedCommand}" />
+                        <TextBlock Text="{Binding StatusText}" Margin="12,0,0,0" VerticalAlignment="Center" Opacity="0.7"/>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <!-- Add transaction -->
+            <Border Grid.Column="2" CornerRadius="14" BorderBrush="#DDD" BorderThickness="1" Padding="14">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="Добавить" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,10"/>
+
+                    <StackPanel>
+                        <TextBlock Text="Тип" Opacity="0.7"/>
+                        <ComboBox ItemsSource="{Binding TransactionTypes}" SelectedItem="{Binding NewType}" />
+
+                        <TextBlock Text="Категория" Opacity="0.7"/>
+                        <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding NewCategory}" />
+
+                        <TextBlock Text="Дата" Opacity="0.7"/>
+                        <DatePicker SelectedDate="{Binding NewDate}" />
+
+                        <TextBlock Text="Описание" Opacity="0.7"/>
+                        <TextBox Text="{Binding NewDescription}" />
+
+                        <TextBlock Text="Сумма" Opacity="0.7"/>
+                        <TextBox Text="{Binding NewAmountText}" />
+
+                        <Button Content="Добавить операцию" Command="{Binding AddTransactionCommand}" />
+                        <TextBlock Text="{Binding ValidationText}" Foreground="DarkRed" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>
