@@ -3,7 +3,11 @@ using FinanceBuddy.Models;
 
 namespace FinanceBuddy.Services;
 
-public sealed class InMemoryFinanceRepository
+/// <summary>
+/// Заглушка слоя Data. Используется как простой источник данных в памяти.
+/// На этапе PR 09-10 приложение переключено на EF Core (SQLite), но заглушка оставлена для демонстрации.
+/// </summary>
+public sealed class InMemoryFinanceRepository : IFinanceRepository
 {
     public ObservableCollection<string> Categories { get; } = new()
     {
@@ -13,14 +17,14 @@ public sealed class InMemoryFinanceRepository
         "Развлечения",
         "Здоровье",
         "Зарплата",
-        "Другое"
+        "Другое",
     };
 
     public ObservableCollection<Transaction> Transactions { get; } = new();
 
     public InMemoryFinanceRepository()
     {
-        // демо‑данные для проверки UI
+        // тестовые данные
         Transactions.Add(new Transaction
         {
             Date = DateTime.Today.AddDays(-2),
@@ -40,11 +44,57 @@ public sealed class InMemoryFinanceRepository
         });
     }
 
-    public void AddTransaction(Transaction tx) => Transactions.Add(tx);
+    public void Reload()
+    {
+        // in-memory: ничего не делаем
+    }
+
+    public void AddCategory(string name)
+    {
+        name = Normalize(name);
+        if (string.IsNullOrWhiteSpace(name))
+            return;
+
+        if (!Categories.Contains(name))
+            Categories.Add(name);
+    }
+
+    public void DeleteCategory(string name)
+    {
+        name = Normalize(name);
+        if (string.IsNullOrWhiteSpace(name))
+            return;
+
+        if (Transactions.Any(t => string.Equals(t.Category, name, StringComparison.OrdinalIgnoreCase)))
+            throw new InvalidOperationException("Нельзя удалить категорию, которая используется в операциях.");
+
+        Categories.Remove(name);
+    }
+
+    public void AddTransaction(Transaction tx)
+    {
+        Transactions.Add(tx);
+    }
+
+    public void UpdateTransaction(Transaction tx)
+    {
+        var existing = Transactions.FirstOrDefault(x => x.Id == tx.Id);
+        if (existing is null)
+            return;
+
+        existing.Date = tx.Date;
+        existing.Type = tx.Type;
+        existing.Category = tx.Category;
+        existing.Description = tx.Description;
+        existing.Amount = tx.Amount;
+    }
 
     public void DeleteTransaction(Guid id)
     {
-        var target = Transactions.FirstOrDefault(t => t.Id == id);
-        if (target != null) Transactions.Remove(target);
+        var tx = Transactions.FirstOrDefault(x => x.Id == id);
+        if (tx != null)
+            Transactions.Remove(tx);
     }
+
+    private static string Normalize(string value) => (value ?? string.Empty).Trim();
 }

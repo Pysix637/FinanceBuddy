@@ -1,0 +1,43 @@
+<Window x:Class="FinanceBuddy.Windows.CategoryManageWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Категории" Height="420" Width="520"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0">
+            <TextBlock Text="Категории" FontSize="18" FontWeight="SemiBold" DockPanel.Dock="Left"/>
+        </DockPanel>
+
+        <Grid Grid.Row="1" Margin="0,14,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <ListBox ItemsSource="{Binding Categories}" SelectedItem="{Binding Selected}" />
+
+            <StackPanel Grid.Column="2" Width="180">
+                <TextBlock Text="Новая категория" Opacity="0.7"/>
+                <TextBox Text="{Binding NewCategoryName}" Margin="0,6,0,0"/>
+                <Button Content="Добавить" Command="{Binding AddCategoryCommand}" Margin="0,10,0,0"/>
+
+                <Separator Margin="0,14,0,14"/>
+
+                <Button Content="Удалить выбранную" Command="{Binding DeleteSelectedCommand}" />
+                <TextBlock Text="{Binding StatusText}" Margin="0,10,0,0" Opacity="0.7" TextWrapping="Wrap"/>
+            </StackPanel>
+        </Grid>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
+            <Button Content="Закрыть" Width="110" IsCancel="True"/>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -2,25 +2,21 @@
 left to right direction
 skinparam packageStyle rectangle
 
-actor "Пользователь" as User
+actor "Пользователь" as U
 
 rectangle "FinanceBuddy" {
-  usecase "Добавить операцию
-(доход/расход)" as UC_Add
-  usecase "Просмотреть список
-операций" as UC_View
-  usecase "Удалить операцию" as UC_Delete
-  usecase "Посмотреть сводку
-(доход, расход,
-баланс)" as UC_Summary
-
-  UC_Add --> UC_Summary : <<include>>
-  UC_View --> UC_Summary : <<include>>
-  UC_Delete --> UC_Summary : <<include>>
+  usecase "Добавить операцию" as UC1
+  usecase "Редактировать операцию" as UC2
+  usecase "Удалить операцию" as UC3
+  usecase "Просмотреть список операций" as UC4
+  usecase "Посмотреть сводку" as UC5
+  usecase "Управлять категориями" as UC6
 }
 
-User --> UC_Add
-User --> UC_View
-User --> UC_Delete
-User --> UC_Summary
+U --> UC1
+U --> UC2
+U --> UC3
+U --> UC4
+U --> UC5
+U --> UC6
 @enduml

@@ -1,15 +1,17 @@
 using System.Collections.ObjectModel;
-using System.Globalization;
-using System.Windows.Input;
-using FinanceBuddy.Helpers;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using FinanceBuddy.Models;
 using FinanceBuddy.Services;
 
 namespace FinanceBuddy.ViewModels;
 
-public sealed class MainViewModel : ObservableObject
+public sealed partial class MainViewModel : ObservableObject
 {
-    private readonly InMemoryFinanceRepository _repo = new();
+    private readonly IFinanceRepository _repo;
+    private readonly IFinanceSummaryService _summaryService;
+    private readonly IAmountParser _amountParser;
+    private readonly IEditWindowsService _editWindows;
 
     public ObservableCollection<Transaction> Transactions => _repo.Transactions;
     public ObservableCollection<string> Categories => _repo.Categories;
@@ -17,57 +19,68 @@ public sealed class MainViewModel : ObservableObject
     public IReadOnlyList<TransactionType> TransactionTypes { get; } =
         Enum.GetValues(typeof(TransactionType)).Cast<TransactionType>().ToList();
 
-    private TransactionType _newType = TransactionType.Expense;
-    public TransactionType NewType { get => _newType; set { if (Set(ref _newType, value)) Recalc(); } }
+    [ObservableProperty] private TransactionType newType = TransactionType.Expense;
+    [ObservableProperty] private string newCategory = "Другое";
+    [ObservableProperty] private DateTime? newDate = DateTime.Today;
+    [ObservableProperty] private string newDescription = string.Empty;
+    [ObservableProperty] private string newAmountText = string.Empty;
+    [ObservableProperty] private string validationText = string.Empty;
 
-    private string _newCategory = "Другое";
-    public string NewCategory { get => _newCategory; set => Set(ref _newCategory, value); }
-
-    private DateTime? _newDate = DateTime.Today;
-    public DateTime? NewDate { get => _newDate; set => Set(ref _newDate, value); }
-
-    private string _newDescription = "";
-    public string NewDescription { get => _newDescription; set => Set(ref _newDescription, value); }
-
-    private string _newAmountText = "";
-    public string NewAmountText { get => _newAmountText; set => Set(ref _newAmountText, value); }
-
-    private string _validationText = "";
-    public string ValidationText { get => _validationText; set => Set(ref _validationText, value); }
-
-    private decimal _totalIncome;
-    public decimal TotalIncome { get => _totalIncome; private set => Set(ref _totalIncome, value); }
-
-    private decimal _totalExpense;
-    public decimal TotalExpense { get => _totalExpense; private set => Set(ref _totalExpense, value); }
-
+    [ObservableProperty] private decimal totalIncome;
+    [ObservableProperty] private decimal totalExpense;
     public decimal Balance => TotalIncome - TotalExpense;
 
-    private Transaction? _selected;
-    public Transaction? Selected
+    [ObservableProperty] private Transaction? selected;
+    [ObservableProperty] private string statusText = "готово";
+
+    public MainViewModel(
+        IFinanceRepository repo,
+        IFinanceSummaryService summaryService,
+        IAmountParser amountParser,
+        IEditWindowsService editWindows)
     {
-        get => _selected;
-        set { if (Set(ref _selected, value)) ((RelayCommand)DeleteSelectedCommand).RaiseCanExecuteChanged(); }
-    }
-
-    private string _statusText = "готово";
-    public string StatusText { get => _statusText; set => Set(ref _statusText, value); }
-
-    public ICommand AddTransactionCommand { get; }
-    public ICommand DeleteSelectedCommand { get; }
-
-    public MainViewModel()
-    {
-        AddTransactionCommand = new RelayCommand(AddTransaction);
-        DeleteSelectedCommand = new RelayCommand(DeleteSelected, () => Selected != null);
+        _repo = repo;
+        _summaryService = summaryService;
+        _amountParser = amountParser;
+        _editWindows = editWindows;
 
         Transactions.CollectionChanged += (_, _) => Recalc();
         Recalc();
     }
 
+    partial void OnSelectedChanged(Transaction? value)
+    {
+        DeleteSelectedCommand.NotifyCanExecuteChanged();
+        EditSelectedCommand.NotifyCanExecuteChanged();
+    }
+
+    private void Recalc()
+    {
+        var summary = _summaryService.Calculate(Transactions);
+        TotalIncome = summary.TotalIncome;
+        TotalExpense = summary.TotalExpense;
+        OnPropertyChanged(nameof(Balance));
+    }
+
+    [RelayCommand]
+    private void Reload()
+    {
+        _repo.Reload();
+        StatusText = "обновлено";
+        Recalc();
+    }
+
+    [RelayCommand]
+    private void ManageCategories()
+    {
+        _editWindows.ManageCategories();
+        StatusText = "категории: ок";
+    }
+
+    [RelayCommand]
     private void AddTransaction()
     {
-        ValidationText = "";
+        ValidationText = string.Empty;
 
         if (NewDate is null)
         {
@@ -75,8 +88,7 @@ public sealed class MainViewModel : ObservableObject
             return;
         }
 
-        if (!decimal.TryParse(NewAmountText, NumberStyles.Number, CultureInfo.GetCultureInfo("ru-RU"), out var amount) &&
-            !decimal.TryParse(NewAmountText, NumberStyles.Number, CultureInfo.InvariantCulture, out amount))
+        if (!_amountParser.TryParse(NewAmountText, out var amount))
         {
             ValidationText = "Сумма введена неверно. Пример: 199,90";
             return;
@@ -88,35 +100,59 @@ public sealed class MainViewModel : ObservableObject
             return;
         }
 
+        var category = string.IsNullOrWhiteSpace(NewCategory) ? "Другое" : NewCategory.Trim();
+
         var tx = new Transaction
         {
             Date = NewDate.Value,
             Type = NewType,
-            Category = string.IsNullOrWhiteSpace(NewCategory) ? "Другое" : NewCategory.Trim(),
-            Description = NewDescription?.Trim() ?? "",
+            Category = category,
+            Description = NewDescription.Trim(),
             Amount = amount
         };
 
         _repo.AddTransaction(tx);
 
-        NewDescription = "";
-        NewAmountText = "";
+        NewDescription = string.Empty;
+        NewAmountText = string.Empty;
+
         StatusText = $"добавлено: {tx.Category} {tx.Amount:N2}";
         Recalc();
     }
 
+    private bool CanDeleteSelected() => Selected != null;
+
+    [RelayCommand(CanExecute = nameof(CanDeleteSelected))]
     private void DeleteSelected()
     {
-        if (Selected == null) return;
+        if (Selected is null)
+            return;
+
         _repo.DeleteTransaction(Selected.Id);
+        Selected = null;
         StatusText = "удалено";
         Recalc();
     }
 
-    private void Recalc()
+    private bool CanEditSelected() => Selected != null;
+
+    [RelayCommand(CanExecute = nameof(CanEditSelected))]
+    private void EditSelected()
     {
-        TotalIncome = Transactions.Where(t => t.Type == TransactionType.Income).Sum(t => t.Amount);
-        TotalExpense = Transactions.Where(t => t.Type == TransactionType.Expense).Sum(t => t.Amount);
-        Raise(nameof(Balance));
+        if (Selected is null)
+            return;
+
+        // открываем модальное окно редактирования
+        var ok = _editWindows.EditTransaction(Selected, Categories.ToList());
+        if (!ok)
+        {
+            StatusText = "редактирование отменено";
+            return;
+        }
+
+        // сохраняем изменения в БД
+        _repo.UpdateTransaction(Selected);
+        StatusText = "изменения сохранены";
+        Recalc();
     }
 }

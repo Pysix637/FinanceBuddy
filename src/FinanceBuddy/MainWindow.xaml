@@ -63,6 +63,9 @@
 
                     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,10,0,0">
                         <Button Content="Удалить выбранное" Command="{Binding DeleteSelectedCommand}" />
+                        <Button Content="Редактировать" Command="{Binding EditSelectedCommand}" Margin="8,0,0,0"/>
+                        <Button Content="Категории" Command="{Binding ManageCategoriesCommand}" Margin="8,0,0,0"/>
+                        <Button Content="Обновить" Command="{Binding ReloadCommand}" Margin="8,0,0,0"/>
                         <TextBlock Text="{Binding StatusText}" Margin="12,0,0,0" VerticalAlignment="Center" Opacity="0.7"/>
                     </StackPanel>
                 </DockPanel>
@@ -78,7 +81,7 @@
                         <ComboBox ItemsSource="{Binding TransactionTypes}" SelectedItem="{Binding NewType}" />
 
                         <TextBlock Text="Категория" Opacity="0.7"/>
-                        <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding NewCategory}" />
+                        <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding NewCategory}" IsEditable="True" />
 
                         <TextBlock Text="Дата" Opacity="0.7"/>
                         <DatePicker SelectedDate="{Binding NewDate}" />

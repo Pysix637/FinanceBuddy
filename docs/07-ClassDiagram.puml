@@ -15,24 +15,61 @@ enum TransactionType {
   Expense
 }
 
-class MainViewModel {
-  +ObservableCollection<Transaction> Transactions
-  +ObservableCollection<string> Categories
-  +AddTransactionCommand
-  +DeleteSelectedCommand
-  +TotalIncome
-  +TotalExpense
-  +Balance
-}
-
-class InMemoryFinanceRepository {
+interface IFinanceRepository {
   +ObservableCollection<string> Categories
   +ObservableCollection<Transaction> Transactions
+  +Reload()
+  +AddCategory(name)
+  +DeleteCategory(name)
   +AddTransaction(tx)
+  +UpdateTransaction(tx)
   +DeleteTransaction(id)
 }
 
-MainViewModel --> InMemoryFinanceRepository : uses
-InMemoryFinanceRepository "1" o-- "*" Transaction
-Transaction --> TransactionType
+class EfFinanceRepository
+class InMemoryFinanceRepository
+
+interface IFinanceSummaryService {
+  +Calculate(transactions)
+}
+
+class FinanceSummaryService
+
+interface IAmountParser {
+  +TryParse(text)
+}
+
+class RuAmountParser
+
+interface IEditWindowsService {
+  +EditTransaction(tx, categories)
+  +ManageCategories()
+}
+
+class EditWindowsService
+
+class MainViewModel {
+  +AddTransactionCommand
+  +EditSelectedCommand
+  +DeleteSelectedCommand
+  +ManageCategoriesCommand
+  +ReloadCommand
+}
+
+class FinanceBuddyDbContext
+
+MainViewModel --> IFinanceRepository : использует
+MainViewModel --> IFinanceSummaryService : использует
+MainViewModel --> IAmountParser : использует
+MainViewModel --> IEditWindowsService : использует
+
+IFinanceRepository <|.. EfFinanceRepository
+IFinanceRepository <|.. InMemoryFinanceRepository
+
+IFinanceSummaryService <|.. FinanceSummaryService
+IAmountParser <|.. RuAmountParser
+IEditWindowsService <|.. EditWindowsService
+
+EfFinanceRepository --> FinanceBuddyDbContext : EF Core
+
 @enduml

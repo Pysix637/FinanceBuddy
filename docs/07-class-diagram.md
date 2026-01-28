@@ -4,10 +4,10 @@
 ![Диаграмма классов](img/classdiagram.png)
 
 ## Комментарий
-Я сделал модель под первый этап проекта:
-- `MainViewModel` управляет данными экрана и командами;
-- `InMemoryFinanceRepository` хранит категории и операции в памяти;
-- `Transaction` описывает одну операцию;
-- `TransactionType` задаёт тип операции, доход или расход.
-
-Дальше я заменю репозиторий на реализацию с SQLite, логика ViewModel при этом останется похожей.
+На диаграмме показаны ключевые элементы приложения:
+- `MainViewModel` — управляет состоянием главного окна и командами.
+- `Transaction` — модель операции.
+- `IFinanceRepository` — контракт слоя Data (категории + операции, CRUD).
+- `EfFinanceRepository` — реализация репозитория на EF Core (SQLite).
+- `FinanceBuddyDbContext` — контекст EF Core с таблицами `Categories` и `Transactions`.
+- `IEditWindowsService` — сервис открытия окон редактирования (операция/категории).

@@ -3,24 +3,33 @@
 ## Логическая модель
 
 ### Transaction, операция
-- Id, Guid
-- Date, DateTime
-- Type, TransactionType
-- Category, string
-- Description, string
-- Amount, decimal
+- `Id` (Guid) — идентификатор.
+- `Date` (DateTime) — дата операции.
+- `Type` (TransactionType) — доход/расход.
+- `Category` (string) — категория.
+- `Description` (string) — описание.
+- `Amount` (decimal) — сумма.
 
-### Category
-На первом этапе я использую строку с названием категории.
+### Category, категория
+На уровне UI категория — строка с названием. В БД категория хранится в отдельной таблице.
 
-## План для SQLite
-### Таблица Transactions
-- Id, TEXT, primary key
-- Date, TEXT в формате ISO
-- Type, INTEGER
-- Category, TEXT
-- Description, TEXT
-- Amount, NUMERIC
+## Физическая модель (SQLite + EF Core)
 
-## План формата JSON
-- массив объектов Transaction
+База данных создаётся автоматически при запуске приложения.
+Файл базы: `%LOCALAPPDATA%\FinanceBuddy\financebuddy.db`.
+
+### Таблица `Categories`
+- `Name` TEXT — primary key (название категории).
+
+### Таблица `Transactions`
+- `Id` TEXT — primary key (Guid).
+- `Date` TEXT/NUMERIC — дата.
+- `Type` INTEGER — значение enum `TransactionType`.
+- `CategoryName` TEXT — внешний ключ на `Categories(Name)`.
+- `Description` TEXT — описание.
+- `Amount` NUMERIC — сумма.
+
+## Тестовые данные
+При первом запуске выполняется seed:
+- создаются стандартные категории;
+- добавляется несколько операций (доход/расход) для проверки UI.
